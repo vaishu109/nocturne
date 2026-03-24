@@ -46,14 +46,14 @@ window.showFeed = () => {
         <header class="feed-header">
           <h2>Latest Discoveries</h2>
           <div class="filter-btns">
-             <button class="active">All</button>
-             <button>Music</button>
-             <button>Images</button>
-             <button>Code</button>
+             <button class="active" onclick="filterFeed('all')">All</button>
+             <button onclick="filterFeed('music')">Music</button>
+             <button onclick="filterFeed('image')">Images</button>
+             <button onclick="filterFeed('code')">Code</button>
           </div>
         </header>
         
-        <div class="media-grid">
+        <div id="mediaGrid" class="media-grid">
           ${mediaData.map(item => renderMediaCard(item)).join('')}
         </div>
       </div>
@@ -61,11 +61,24 @@ window.showFeed = () => {
   `;
 };
 
+window.filterFeed = (type) => {
+  const filtered = type === 'all' ? mediaData : mediaData.filter(m => m.type === type);
+  document.getElementById('mediaGrid').innerHTML = filtered.map(item => renderMediaCard(item)).join('');
+  document.querySelectorAll('.filter-btns button').forEach(btn => {
+    btn.classList.toggle('active', btn.innerText.toLowerCase() === type);
+  });
+};
+
 // Modal Logic
 const modalHtml = `
   <div id="modalOverlay" class="modal-overlay">
     <div class="modal-content glass">
-      <h2>Share New Media</h2>
+      <h2>Transfer New Media</h2>
+      <div id="dropZone" class="drop-zone">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Drop file here or click to select</p>
+        <input type="file" id="fileInput" style="display: none">
+      </div>
       <div class="form-group">
         <label>Title</label>
         <input type="text" id="mediaTitle" placeholder="Give it a name...">
@@ -78,13 +91,16 @@ const modalHtml = `
           <option value="code">Code</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Creator / Description</label>
-        <input type="text" id="mediaCreator" placeholder="Your name or artist...">
+      <div class="transfer-progress-container" id="progressContainer">
+         <div class="transfer-info">
+           <span id="transferStatus">Transferring...</span>
+           <span id="transferPercent">0%</span>
+         </div>
+         <div class="transfer-bar"><div id="transferFill" class="transfer-fill"></div></div>
       </div>
-      <div class="modal-actions">
+      <div class="modal-actions" id="modalActions">
         <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn-primary" onclick="handleUpload()">Share Now</button>
+        <button class="btn-primary" onclick="handleUpload()">Initialize Transfer</button>
       </div>
     </div>
   </div>
@@ -94,33 +110,99 @@ document.body.insertAdjacentHTML('beforeend', modalHtml);
 
 window.openModal = () => {
   document.getElementById('modalOverlay').classList.add('active');
+  setupDropZone();
 };
+
+function setupDropZone() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.onclick = () => fileInput.click();
+
+  fileInput.onchange = (e) => handleFileSelection(e.target.files[0]);
+
+  dropZone.ondragover = (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  };
+
+  dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
+
+  dropZone.ondrop = (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    handleFileSelection(e.dataTransfer.files[0]);
+  };
+}
+
+let selectedFile = null;
+
+function handleFileSelection(file) {
+  if (!file) return;
+  selectedFile = file;
+  document.getElementById('mediaTitle').value = file.name;
+  document.getElementById('dropZone').innerHTML = `<i class="fas fa-file-alt" style="color: var(--primary-neon)"></i><p>${file.name} ready</p>`;
+}
 
 window.closeModal = () => {
   document.getElementById('modalOverlay').classList.remove('active');
+  // Reset
+  document.getElementById('mediaTitle').value = '';
+  document.getElementById('progressContainer').classList.remove('active');
+  document.getElementById('modalActions').style.display = 'flex';
+  selectedFile = null;
+  document.getElementById('dropZone').innerHTML = `<i class="fas fa-cloud-upload-alt"></i><p>Drop file here or click to select</p>`;
 };
 
 window.handleUpload = () => {
   const title = document.getElementById('mediaTitle').value;
   const type = document.getElementById('mediaType').value;
-  const creator = document.getElementById('mediaCreator').value;
   
   if (!title) return alert('Please enter a title');
   
+  document.getElementById('modalActions').style.display = 'none';
+  document.getElementById('progressContainer').classList.add('active');
+  
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      finalizeUpload(title, type);
+    }
+    document.getElementById('transferFill').style.width = progress + '%';
+    document.getElementById('transferPercent').innerText = Math.round(progress) + '%';
+  }, 200);
+};
+
+function finalizeUpload(title, type) {
   const newItem = {
     type,
     title,
-    [type === 'music' ? 'artist' : (type === 'image' ? 'author' : 'language')]: creator,
+    artist: 'Me',
+    author: 'Me',
+    language: 'Custom',
+    size: selectedFile ? (selectedFile.size / 1024).toFixed(1) + ' KB' : '0 KB',
     accent: type === 'music' ? '#99f7ff' : (type === 'image' ? '#bc13fe' : '#6fb5ff'),
     id: Date.now()
   };
   
   mediaData.unshift(newItem);
-  closeModal();
-  showFeed();
-};
+  setTimeout(() => {
+    closeModal();
+    showFeed();
+  }, 500);
+}
 
 function renderMediaCard(item) {
+  const commonFooter = `
+    <div class="card-footer">
+       <a href="#" class="download-btn" onclick="alert('Starting Download for ${item.title}...')"><i class="fas fa-download"></i> Download</a>
+       <span class="meta"><i class="fas fa-share"></i></span>
+    </div>
+  `;
+
   if (item.type === 'music') {
     return `
       <div class="media-card glass music-card" style="--accent: ${item.accent}">
@@ -134,6 +216,7 @@ function renderMediaCard(item) {
           <div class="card-footer">
              <button class="play-btn"><i class="fas fa-play"></i></button>
              <div class="progress-bar"><div class="progress" style="width: 30%"></div></div>
+             <a href="#" class="download-btn" onclick="alert('Starting Download for ${item.title}...')"><i class="fas fa-download"></i></a>
           </div>
         </div>
       </div>
@@ -149,10 +232,7 @@ function renderMediaCard(item) {
          <div class="card-content">
            <h4>${item.title}</h4>
            <p>By ${item.author}</p>
-           <div class="card-footer">
-             <span class="meta"><i class="fas fa-heart"></i> 24</span>
-             <span class="meta"><i class="fas fa-share"></i> Share</span>
-           </div>
+           ${commonFooter}
          </div>
       </div>
     `;
@@ -165,13 +245,8 @@ function renderMediaCard(item) {
           <i class="fas fa-code"></i>
           <h4>${item.title}</h4>
           <p>${item.language} • ${item.size}</p>
-          <pre class="code-preview"><code>.glass {
-  background: rgba(38, 38, 38, 0.6);
-  backdrop-filter: blur(20px);
-}</code></pre>
-          <div class="card-footer">
-             <button class="copy-btn"><i class="fas fa-copy"></i> Copy Code</button>
-          </div>
+          <pre class="code-preview"><code>// Code snippet...</code></pre>
+          ${commonFooter}
         </div>
       </div>
     `;

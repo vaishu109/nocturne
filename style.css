@@ -434,3 +434,88 @@ h1, h2, h3 {
   color: var(--text-muted);
   cursor: pointer;
 }
+
+.btn-secondary:hover {
+  color: #fff;
+}
+
+/* Drop Zone & Transfer Styles */
+.drop-zone {
+  border: 2px dashed var(--surface-highest);
+  border-radius: 15px;
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.drop-zone.drag-over {
+  border-color: var(--primary-neon);
+  background: rgba(153, 247, 255, 0.05);
+  transform: scale(1.02);
+}
+
+.drop-zone i {
+  font-size: 3rem;
+  color: var(--surface-highest);
+}
+
+.drop-zone.drag-over i {
+  color: var(--primary-neon);
+}
+
+.transfer-progress-container {
+  margin-top: 2rem;
+  display: none;
+}
+
+.transfer-progress-container.active {
+  display: block;
+}
+
+.transfer-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.transfer-bar {
+  height: 8px;
+  background: var(--surface-highest);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.transfer-fill {
+  height: 100%;
+  background: var(--primary-neon);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.download-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+  background: var(--primary-neon);
+  color: #000;
+  border-color: var(--primary-neon);
+}
