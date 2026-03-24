@@ -1,257 +1,98 @@
-const app = document.getElementById('app');
+const ADJECTIVES = ['Neon', 'Solar', 'Lunar', 'Cyber', 'Arctic', 'Vibrant', 'Silent', 'Electric'];
+const NOUNS = ['Fox', 'Lynx', 'Raven', 'Panda', 'Eagle', 'Wolf', 'Shark', 'Falcon'];
 
-const mediaData = [
-  {
-    type: 'music',
-    title: 'Neon Nights',
-    artist: 'Digital Spirit',
-    id: 1,
-    accent: '#99f7ff'
-  },
-  {
-    type: 'image',
-    title: 'Cyberpunk Skyline',
-    author: 'AuraLens',
-    id: 2,
-    accent: '#bc13fe'
-  },
-  {
-    type: 'code',
-    title: 'Glassmorphic Button Hook',
-    language: 'React / CSS',
-    size: '1.2 KB',
-    id: 3,
-    accent: '#6fb5ff'
-  }
+function generateIdentity() {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+  return `${adj} ${noun}`;
+}
+
+const myIdentity = generateIdentity();
+const myRoom = 'VIBE-' + Math.floor(Math.random() * 99);
+
+const peers = [
+  { name: 'Crystal Cat', id: 'p1', icon: 'fas fa-laptop' },
+  { name: 'Orbit Owl', id: 'p2', icon: 'fas fa-mobile-alt' },
+  { name: 'Glimmer Goat', id: 'p3', icon: 'fas fa-desktop' }
 ];
 
-window.showFeed = (defaultType = 'all') => {
-  app.innerHTML = `
-    <div class="feed-container">
-      <aside class="sidebar glass">
-        <div class="sidebar-links">
-          <a href="/" onclick="location.reload(); return false;"><i class="fas fa-home"></i> Home</a>
-          <a href="#" onclick="filterFeed('all'); return false;" class="${defaultType === 'all' ? 'active' : ''}"><i class="fas fa-rss"></i> Feed</a>
-          <a href="#" onclick="filterFeed('music'); return false;" class="${defaultType === 'music' ? 'active' : ''}"><i class="fas fa-music"></i> Music</a>
-          <a href="#" onclick="filterFeed('image'); return false;" class="${defaultType === 'image' ? 'active' : ''}"><i class="fas fa-images"></i> Images</a>
-          <a href="#" onclick="filterFeed('code'); return false;" class="${defaultType === 'code' ? 'active' : ''}"><i class="fas fa-code"></i> Code</a>
-          <a href="#"><i class="fas fa-user-friends"></i> Friends</a>
-        </div>
-        <button class="btn-primary" style="padding: 0.8rem; width: 100%; font-size: 0.9rem;" onclick="openModal()">
-          <i class="fas fa-plus"></i> NEW TRANSFER
-        </button>
-      </aside>
-      
-      <div class="main-feed">
-        <header class="feed-header">
-          <h2>Latest Discoveries</h2>
-          <div class="filter-btns">
-             <button class="${defaultType === 'all' ? 'active' : ''}" onclick="filterFeed('all')">All</button>
-             <button class="${defaultType === 'music' ? 'active' : ''}" onclick="filterFeed('music')">Music</button>
-             <button class="${defaultType === 'image' ? 'active' : ''}" onclick="filterFeed('image')">Images</button>
-             <button class="${defaultType === 'code' ? 'active' : ''}" onclick="filterFeed('code')">Code</button>
+const app = document.getElementById('app');
+
+function initHub() {
+  document.getElementById('userIdentity').innerText = `You are ${myIdentity}`;
+  document.getElementById('roomCode').innerText = `nocturne.net/${myRoom.toLowerCase()}`;
+  renderDeviceGrid();
+  setupGlobalDragAndDrop();
+}
+
+function renderDeviceGrid() {
+  const grid = document.getElementById('deviceGrid');
+  grid.innerHTML = `
+    <div class="device-tile self glass" id="selfDevice">
+        <div class="device-icon"><i class="fas fa-user-circle"></i></div>
+        <div class="device-name">You (${myIdentity})</div>
+        <div class="pulse-ring"></div>
+    </div>
+    ${peers.map(peer => `
+      <div class="device-tile peer glass" id="device-${peer.id}" onclick="triggerFilePick('${peer.id}')">
+          <div class="device-icon"><i class="${peer.icon}"></i></div>
+          <div class="device-name">${peer.name}</div>
+          <div class="transfer-overlay" id="overlay-${peer.id}">
+             <div class="progress-arc"></div>
+             <span class="percent">0%</span>
           </div>
-        </header>
-        
-        <div id="mediaGrid" class="media-grid">
-          ${(defaultType === 'all' ? mediaData : mediaData.filter(m => m.type === defaultType)).map(item => renderMediaCard(item)).join('')}
-        </div>
       </div>
-    </div>
+    `).join('')}
   `;
-};
+}
 
-window.filterFeed = (type) => {
-  const filtered = type === 'all' ? mediaData : mediaData.filter(m => m.type === type);
-  document.getElementById('mediaGrid').innerHTML = filtered.map(item => renderMediaCard(item)).join('');
-  document.querySelectorAll('.filter-btns button').forEach(btn => {
-    btn.classList.toggle('active', btn.innerText.toLowerCase() === type);
-  });
-  document.querySelectorAll('.sidebar-links a').forEach(link => {
-    link.classList.toggle('active', link.innerText.toLowerCase().includes(type));
-  });
-};
-
-// Modal Logic
-const modalHtml = `
-  <div id="modalOverlay" class="modal-overlay">
-    <div class="modal-content glass">
-      <h2>Transfer New Media</h2>
-      <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
-        <i class="fas fa-cloud-upload-alt"></i>
-        <p>Drop file here or <span>click to select</span></p>
-        <input type="file" id="fileInput" style="display: none" onchange="handleFileSelection(this.files[0])">
-      </div>
-      <div class="form-group">
-        <label>Title</label>
-        <input type="text" id="mediaTitle" placeholder="Give it a name...">
-      </div>
-      <div class="form-group">
-        <label>Type</label>
-        <select id="mediaType">
-          <option value="music">Music</option>
-          <option value="image">Image</option>
-          <option value="code">Code</option>
-        </select>
-      </div>
-      <div class="transfer-progress-container" id="progressContainer">
-         <div class="transfer-info">
-           <span id="transferStatus">Transferring...</span>
-           <span id="transferPercent">0%</span>
-         </div>
-         <div class="transfer-bar"><div id="transferFill" class="transfer-fill"></div></div>
-      </div>
-      <div class="modal-actions" id="modalActions">
-        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn-primary" onclick="handleUpload()">Initialize Transfer</button>
-      </div>
-    </div>
-  </div>
-`;
-
-document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-window.openModal = () => {
-  document.getElementById('modalOverlay').classList.add('active');
-  setupDropZone();
-};
-
-function setupDropZone() {
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('fileInput');
-
-  dropZone.onclick = () => fileInput.click();
-
-  fileInput.onchange = (e) => handleFileSelection(e.target.files[0]);
-
-  dropZone.ondragover = (e) => {
+function setupGlobalDragAndDrop() {
+  window.ondragover = (e) => e.preventDefault();
+  window.ondrop = (e) => {
     e.preventDefault();
-    dropZone.classList.add('drag-over');
-  };
-
-  dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
-
-  dropZone.ondrop = (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    handleFileSelection(e.dataTransfer.files[0]);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      alert(`Transferring ${files.length} files to the room...`);
+      // Simulate transfer to first peer for demo
+      simulateTransfer(peers[0].id, files[0].name);
+    }
   };
 }
 
-let selectedFile = null;
-
-function handleFileSelection(file) {
-  if (!file) return;
-  selectedFile = file;
-  document.getElementById('mediaTitle').value = file.name;
-  document.getElementById('dropZone').innerHTML = `<i class="fas fa-file-alt" style="color: var(--primary-neon)"></i><p>${file.name} ready</p>`;
-}
-
-window.closeModal = () => {
-  document.getElementById('modalOverlay').classList.remove('active');
-  // Reset
-  document.getElementById('mediaTitle').value = '';
-  document.getElementById('progressContainer').classList.remove('active');
-  document.getElementById('modalActions').style.display = 'flex';
-  selectedFile = null;
-  document.getElementById('dropZone').innerHTML = `<i class="fas fa-cloud-upload-alt"></i><p>Drop file here or click to select</p>`;
+window.triggerFilePick = (peerId) => {
+  const input = document.getElementById('globalFileInput');
+  input.onchange = (e) => {
+    if (e.target.files.length > 0) {
+      simulateTransfer(peerId, e.target.files[0].name);
+    }
+  };
+  input.click();
 };
 
-window.handleUpload = () => {
-  const title = document.getElementById('mediaTitle').value;
-  const type = document.getElementById('mediaType').value;
-  
-  if (!title) return alert('Please enter a title');
-  
-  document.getElementById('modalActions').style.display = 'none';
-  document.getElementById('progressContainer').classList.add('active');
+function simulateTransfer(peerId, fileName) {
+  const overlay = document.getElementById(`overlay-${peerId}`);
+  const percentText = overlay.querySelector('.percent');
+  overlay.classList.add('active');
   
   let progress = 0;
   const interval = setInterval(() => {
-    progress += Math.random() * 15;
+    progress += Math.random() * 10;
     if (progress >= 100) {
       progress = 100;
       clearInterval(interval);
-      finalizeUpload(title, type);
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        alert(`Successfully transferred ${fileName} to ${peers.find(p => p.id === peerId).name}`);
+      }, 500);
     }
-    document.getElementById('transferFill').style.width = progress + '%';
-    document.getElementById('transferPercent').innerText = Math.round(progress) + '%';
-  }, 200);
+    percentText.innerText = Math.round(progress) + '%';
+  }, 100);
+}
+
+window.copyRoomLink = () => {
+    const link = document.getElementById('roomCode').innerText;
+    navigator.clipboard.writeText(link);
+    alert('Room link copied!');
 };
 
-function finalizeUpload(title, type) {
-  const newItem = {
-    type,
-    title,
-    artist: 'Me',
-    author: 'Me',
-    language: 'Custom',
-    size: selectedFile ? (selectedFile.size / 1024).toFixed(1) + ' KB' : '0 KB',
-    accent: type === 'music' ? '#99f7ff' : (type === 'image' ? '#bc13fe' : '#6fb5ff'),
-    id: Date.now()
-  };
-  
-  mediaData.unshift(newItem);
-  setTimeout(() => {
-    closeModal();
-    showFeed();
-  }, 500);
-}
-
-function renderMediaCard(item) {
-  const commonFooter = `
-    <div class="card-footer">
-       <a href="#" class="download-btn" onclick="alert('Starting Download for ${item.title}...')"><i class="fas fa-download"></i> Download</a>
-       <span class="meta"><i class="fas fa-share"></i></span>
-    </div>
-  `;
-
-  if (item.type === 'music') {
-    return `
-      <div class="media-card glass music-card" style="--accent: ${item.accent}">
-        <div class="card-content">
-          <i class="fas fa-music"></i>
-          <h4>${item.title}</h4>
-          <p>${item.artist}</p>
-          <div class="wave-visualizer">
-            <span></span><span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <div class="card-footer">
-             <button class="play-btn"><i class="fas fa-play"></i></button>
-             <div class="progress-bar"><div class="progress" style="width: 30%"></div></div>
-             <a href="#" class="download-btn" onclick="alert('Starting Download for ${item.title}...')"><i class="fas fa-download"></i></a>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  
-  if (item.type === 'image') {
-    return `
-      <div class="media-card glass image-card" style="--accent: ${item.accent}">
-         <div class="image-placeholder" style="background: linear-gradient(45deg, #1a1a1a, #2a2a2a)">
-           <i class="fas fa-image"></i>
-         </div>
-         <div class="card-content">
-           <h4>${item.title}</h4>
-           <p>By ${item.author}</p>
-           ${commonFooter}
-         </div>
-      </div>
-    `;
-  }
-
-  if (item.type === 'code') {
-    return `
-      <div class="media-card glass code-card" style="--accent: ${item.accent}">
-        <div class="card-content">
-          <i class="fas fa-code"></i>
-          <h4>${item.title}</h4>
-          <p>${item.language} • ${item.size}</p>
-          <pre class="code-preview"><code>// Code snippet...</code></pre>
-          ${commonFooter}
-        </div>
-      </div>
-    `;
-  }
-}
+initHub();

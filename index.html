@@ -3,50 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nocturne | Creative Exchange</title>
+    <title>Nocturne | Instant Share</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <nav class="navbar glass">
-        <a href="#" class="logo">NOCTURNE</a>
-        <div class="nav-links">
-            <a href="#music">Music</a>
-            <a href="#images">Images</a>
-            <a href="#code">Code</a>
-            <a href="#friends">Friends</a>
+<body class="hub-mode">
+    <header class="hub-header">
+        <div class="room-info">
+            <span class="room-label">Room:</span>
+            <span class="room-code" id="roomCode">nocturne.net/vibe-7</span>
+            <button class="copy-link-btn" onclick="copyRoomLink()"><i class="fas fa-link"></i></button>
         </div>
-        <a href="#" class="btn-primary" onclick="showFeed()">Get Started</a>
-    </nav>
+        <div class="user-identity" id="userIdentity">
+            Initializing...
+        </div>
+    </header>
 
     <main id="app">
-        <section class="hero">
-            <div class="glow-sphere"></div>
-            <h1>Share your creative energy</h1>
-            <p>A premium high-fidelity media exchange for you and your friends. Music, images, and code snippets, all in one place.</p>
-            <div class="hero-actions">
-                <button class="btn-primary neon-glow" onclick="showFeed()">Explore Nocturne</button>
+        <div class="hub-container">
+            <div class="device-grid" id="deviceGrid">
+                <!-- Devices will be rendered here -->
             </div>
-        </section>
-
-        <section class="sections">
-            <div class="card glass music" onclick="showFeed('music')">
-                <i class="fas fa-wave-square"></i>
-                <h3>Music</h3>
-                <p>Transfer high-quality tracks and playlists with a built-in wave player.</p>
-            </div>
-            <div class="card glass images" onclick="showFeed('image')">
-                <i class="fas fa-image"></i>
-                <h3>Images</h3>
-                <p>Transfer photography and art in a curated gallery-style feed with metadata.</p>
-            </div>
-            <div class="card glass code" onclick="showFeed('code')">
-                <i class="fas fa-code"></i>
-                <h3>Code</h3>
-                <p>Transfer snippets and scripts with full syntax highlighting and copy support.</p>
-            </div>
-        </section>
+        </div>
     </main>
+
+    <div class="hub-footer">
+        <p>Drop files anywhere to share with the room</p>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="globalFileInput" style="display: none" multiple>
 
     <script type="module" src="/main.js"></script>
 </body>
