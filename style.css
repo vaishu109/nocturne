@@ -466,8 +466,14 @@ h1, h2, h3 {
   color: var(--surface-highest);
 }
 
-.drop-zone.drag-over i {
+.drop-zone p span {
   color: var(--primary-neon);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.drop-zone:hover {
+  background: rgba(153, 247, 255, 0.05);
 }
 
 .transfer-progress-container {

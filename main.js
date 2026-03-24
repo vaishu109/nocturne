@@ -77,10 +77,10 @@ const modalHtml = `
   <div id="modalOverlay" class="modal-overlay">
     <div class="modal-content glass">
       <h2>Transfer New Media</h2>
-      <div id="dropZone" class="drop-zone">
+      <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
         <i class="fas fa-cloud-upload-alt"></i>
-        <p>Drop file here or click to select</p>
-        <input type="file" id="fileInput" style="display: none">
+        <p>Drop file here or <span>click to select</span></p>
+        <input type="file" id="fileInput" style="display: none" onchange="handleFileSelection(this.files[0])">
       </div>
       <div class="form-group">
         <label>Title</label>
