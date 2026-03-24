@@ -25,20 +25,20 @@ const mediaData = [
   }
 ];
 
-window.showFeed = () => {
+window.showFeed = (defaultType = 'all') => {
   app.innerHTML = `
     <div class="feed-container">
       <aside class="sidebar glass">
         <div class="sidebar-links">
-          <a href="#" class="active"><i class="fas fa-home"></i> Home</a>
-          <a href="#"><i class="fas fa-rss"></i> Feed</a>
-          <a href="#"><i class="fas fa-music"></i> Music</a>
-          <a href="#"><i class="fas fa-images"></i> Images</a>
-          <a href="#"><i class="fas fa-code"></i> Code</a>
+          <a href="/" onclick="location.reload(); return false;"><i class="fas fa-home"></i> Home</a>
+          <a href="#" onclick="filterFeed('all'); return false;" class="${defaultType === 'all' ? 'active' : ''}"><i class="fas fa-rss"></i> Feed</a>
+          <a href="#" onclick="filterFeed('music'); return false;" class="${defaultType === 'music' ? 'active' : ''}"><i class="fas fa-music"></i> Music</a>
+          <a href="#" onclick="filterFeed('image'); return false;" class="${defaultType === 'image' ? 'active' : ''}"><i class="fas fa-images"></i> Images</a>
+          <a href="#" onclick="filterFeed('code'); return false;" class="${defaultType === 'code' ? 'active' : ''}"><i class="fas fa-code"></i> Code</a>
           <a href="#"><i class="fas fa-user-friends"></i> Friends</a>
         </div>
         <button class="btn-primary" style="padding: 0.8rem; width: 100%; font-size: 0.9rem;" onclick="openModal()">
-          <i class="fas fa-plus"></i> NEW UPLOAD
+          <i class="fas fa-plus"></i> NEW TRANSFER
         </button>
       </aside>
       
@@ -46,15 +46,15 @@ window.showFeed = () => {
         <header class="feed-header">
           <h2>Latest Discoveries</h2>
           <div class="filter-btns">
-             <button class="active" onclick="filterFeed('all')">All</button>
-             <button onclick="filterFeed('music')">Music</button>
-             <button onclick="filterFeed('image')">Images</button>
-             <button onclick="filterFeed('code')">Code</button>
+             <button class="${defaultType === 'all' ? 'active' : ''}" onclick="filterFeed('all')">All</button>
+             <button class="${defaultType === 'music' ? 'active' : ''}" onclick="filterFeed('music')">Music</button>
+             <button class="${defaultType === 'image' ? 'active' : ''}" onclick="filterFeed('image')">Images</button>
+             <button class="${defaultType === 'code' ? 'active' : ''}" onclick="filterFeed('code')">Code</button>
           </div>
         </header>
         
         <div id="mediaGrid" class="media-grid">
-          ${mediaData.map(item => renderMediaCard(item)).join('')}
+          ${(defaultType === 'all' ? mediaData : mediaData.filter(m => m.type === defaultType)).map(item => renderMediaCard(item)).join('')}
         </div>
       </div>
     </div>
@@ -66,6 +66,9 @@ window.filterFeed = (type) => {
   document.getElementById('mediaGrid').innerHTML = filtered.map(item => renderMediaCard(item)).join('');
   document.querySelectorAll('.filter-btns button').forEach(btn => {
     btn.classList.toggle('active', btn.innerText.toLowerCase() === type);
+  });
+  document.querySelectorAll('.sidebar-links a').forEach(link => {
+    link.classList.toggle('active', link.innerText.toLowerCase().includes(type));
   });
 };
 
